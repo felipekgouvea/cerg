@@ -1,17 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+
+// shadcn/ui
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -21,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -28,146 +31,174 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-// import { useToast } from "@/hooks/use-toast";
-import { GraduationCap } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-// Schema de validação
-const formSchema = z.object({
-  studentName: z
-    .string()
-    .min(2, "Nome do aluno deve ter pelo menos 2 caracteres"),
-  birthDate: z.string().min(1, "Data de nascimento é obrigatória"),
-  guardianName: z
-    .string()
-    .min(2, "Nome do responsável deve ter pelo menos 2 caracteres"),
-  guardianPhone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
-  service: z.enum(
-    [
-      "integral",
-      "meio-periodo",
-      "infantil-vespertino",
-      "fundamental-vespertino",
-    ],
-    {
-      message: "Selecione um serviço",
-    },
-  ),
-  grade: z.string().min(1, "Selecione uma série"),
-  paymentOption: z.enum(["vista", "parcelado"], {
-    message: "Selecione uma opção de pagamento",
-  }),
-});
+// server action
+import { createPreEnrollment } from "@/app/actions/pre-enrollment";
+import { toast } from "sonner";
 
-type FormData = z.infer<typeof formSchema>;
+// --- Constantes (séries por modalidade)
+const SERIES_INTEGRAL_MEIO = [
+  "MATERNAL_3",
+  "PRE_I_4",
+  "PRE_II_5",
+  "ANO_1",
+  "ANO_2",
+  "ANO_3",
+  "ANO_4",
+  "ANO_5",
+] as const;
 
-// Opções de séries por serviço
-const gradeOptions = {
-  integral: [
-    { value: "maternal-3", label: "Maternal (3 anos)" },
-    { value: "maternal-4", label: "Maternal (4 anos)" },
-    { value: "pre-1", label: "Pré I (4 anos)" },
-    { value: "pre-2", label: "Pré II (5 anos)" },
-    { value: "1-ano", label: "1º Ano" },
-    { value: "2-ano", label: "2º Ano" },
-    { value: "3-ano", label: "3º Ano" },
-    { value: "4-ano", label: "4º Ano" },
-    { value: "5-ano", label: "5º Ano" },
-  ],
-  "meio-periodo": [
-    { value: "maternal-3", label: "Maternal (3 anos)" },
-    { value: "maternal-4", label: "Maternal (4 anos)" },
-    { value: "pre-1", label: "Pré I (4 anos)" },
-    { value: "pre-2", label: "Pré II (5 anos)" },
-    { value: "1-ano", label: "1º Ano" },
-    { value: "2-ano", label: "2º Ano" },
-    { value: "3-ano", label: "3º Ano" },
-    { value: "4-ano", label: "4º Ano" },
-    { value: "5-ano", label: "5º Ano" },
-  ],
-  "infantil-vespertino": [
-    { value: "maternal-3", label: "Maternal (3 anos)" },
-    { value: "maternal-4", label: "Maternal (4 anos)" },
-    { value: "pre-1", label: "Pré I (4 anos)" },
-    { value: "pre-2", label: "Pré II (5 anos)" },
-  ],
-  "fundamental-vespertino": [
-    { value: "1-ano", label: "1º Ano" },
-    { value: "2-ano", label: "2º Ano" },
-    { value: "3-ano", label: "3º Ano" },
-    { value: "4-ano", label: "4º Ano" },
-    { value: "5-ano", label: "5º Ano" },
-  ],
+const SERIES_INFANTIL_VESP = ["MATERNAL_3", "PRE_I_4", "PRE_II_5"] as const;
+const SERIES_FUND_VESP = ["ANO_1", "ANO_2", "ANO_3", "ANO_4", "ANO_5"] as const;
+
+const SERVICE_OPTIONS = [
+  { value: "integral", label: "Integral" },
+  { value: "meio_periodo", label: "Meio Período" },
+  { value: "infantil_vespertino", label: "Infantil - Vespertino" },
+  { value: "fundamental_vespertino", label: "Fundamental - Vespertino" },
+] as const;
+
+const PAYMENT_OPTIONS = [
+  { value: "one_oct", label: "1x em outubro" },
+  { value: "two_sep_oct", label: "2x (1ª em setembro e 2ª em outubro)" },
+] as const;
+
+// --- Schema Zod
+const zPhone = z
+  .string({ message: "Informe o telefone do responsável." })
+  .min(8, "Telefone inválido.")
+  .regex(/^\+?\d[\d\s()-]{7,}$/, "Telefone inválido.");
+
+const zDate = z
+  .string({ message: "Informe a data de nascimento." })
+  .refine((d) => !Number.isNaN(new Date(d).getTime()), "Data inválida.");
+
+export const preEnrollmentSchema = z
+  .object({
+    studentName: z
+      .string({ message: "Informe o nome do aluno." })
+      .min(3, "Digite o nome completo."),
+    birthDate: zDate,
+    guardianName: z
+      .string({ message: "Informe o nome do responsável." })
+      .min(3, "Digite o nome completo."),
+    guardianPhone: zPhone,
+    service: z.enum(
+      [
+        "integral",
+        "meio_periodo",
+        "infantil_vespertino",
+        "fundamental_vespertino",
+      ] as const,
+      { message: "Selecione o serviço." },
+    ),
+    grade: z.enum(
+      [
+        "MATERNAL_3",
+        "PRE_I_4",
+        "PRE_II_5",
+        "ANO_1",
+        "ANO_2",
+        "ANO_3",
+        "ANO_4",
+        "ANO_5",
+      ] as const,
+      { message: "Selecione a série." },
+    ),
+    paymentOption: z.enum(["one_sep", "two_sep_oct"] as const, {
+      message: "Selecione a forma de pagamento da matrícula.",
+    }),
+  })
+  .superRefine((vals, ctx) => {
+    // valida série compatível com o serviço
+    const mapAllowed: Record<string, readonly string[]> = {
+      integral: SERIES_INTEGRAL_MEIO,
+      meio_periodo: SERIES_INTEGRAL_MEIO,
+      infantil_vespertino: SERIES_INFANTIL_VESP,
+      fundamental_vespertino: SERIES_FUND_VESP,
+    };
+    const allowed = mapAllowed[vals.service] ?? [];
+    if (!allowed.includes(vals.grade)) {
+      ctx.addIssue({
+        path: ["grade"],
+        code: z.ZodIssueCode.custom,
+        message: "A série escolhida não é permitida para esse serviço.",
+      });
+    }
+  });
+
+type PreEnrollmentForm = z.infer<typeof preEnrollmentSchema>;
+
+// --- Helpers de rótulos
+const gradeLabel: Record<PreEnrollmentForm["grade"], string> = {
+  MATERNAL_3: "Maternal (3 anos)",
+  PRE_I_4: "Pré I (4 anos)",
+  PRE_II_5: "Pré II (5 anos)",
+  ANO_1: "1º Ano",
+  ANO_2: "2º Ano",
+  ANO_3: "3º Ano",
+  ANO_4: "4º Ano",
+  ANO_5: "5º Ano",
 };
 
-interface PreEnrollmentFormProps {
-  classForm: string;
-  classFormP: string;
-}
+export default function PreEnrollmentDialog() {
+  const [open, setOpen] = React.useState(false);
 
-export function PreEnrollmentForm({
-  classForm,
-  classFormP,
-}: PreEnrollmentFormProps) {
-  const [open, setOpen] = useState(false);
-  // const { toast } = useToast();
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<PreEnrollmentForm>({
+    resolver: zodResolver(preEnrollmentSchema),
     defaultValues: {
       studentName: "",
       birthDate: "",
       guardianName: "",
       guardianPhone: "",
-      service: undefined,
-      grade: "",
-      paymentOption: undefined,
+      service: undefined as unknown as PreEnrollmentForm["service"],
+      grade: undefined as unknown as PreEnrollmentForm["grade"],
+      paymentOption: undefined as unknown as PreEnrollmentForm["paymentOption"],
     },
+    mode: "onChange",
   });
 
-  const selectedService = form.watch("service");
+  const service = form.watch("service");
 
-  // Reset grade when service changes
-  const handleServiceChange = (value: string) => {
-    form.setValue("service", value as FormData["service"]);
-    form.setValue("grade", "");
-  };
+  const allowedGrades =
+    service === "integral" || service === "meio_periodo"
+      ? SERIES_INTEGRAL_MEIO
+      : service === "infantil_vespertino"
+        ? SERIES_INFANTIL_VESP
+        : service === "fundamental_vespertino"
+          ? SERIES_FUND_VESP
+          : [];
 
-  const onSubmit = (data: FormData) => {
-    console.log("Dados da pré-matrícula:", data);
-
-    // toast({
-    //   title: "Pré-matrícula enviada com sucesso!",
-    //   description: "Entraremos em contato em breve para finalizar o processo.",
-    // });
-
-    setOpen(false);
-    form.reset();
-  };
+  async function onSubmit(values: PreEnrollmentForm) {
+    const ok = await createPreEnrollment(values);
+    if (ok?.success) {
+      setOpen(false);
+      form.reset();
+      toast.success(
+        "Pré-matrícula enviada com sucesso! Nossa equipe entrara em contato em breve!",
+      );
+    } else {
+      toast.error("Erro ao enviar. Tente novamente.");
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className={cn(`w-full sm:w-auto ${classForm}`)}>
-          <p className={cn(`text-[25px] ${classFormP}`)}>
-            Iniciar Pré-Matrícula
-          </p>
+        <Button className="rounded-2xl px-6 py-5 text-base">
+          Pré-matrícula
         </Button>
       </DialogTrigger>
-
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Formulário de Pré-Matrícula</DialogTitle>
+          <DialogTitle>Pré-matrícula 2026</DialogTitle>
           <DialogDescription>
-            Preencha os dados abaixo para iniciar o processo de matrícula.
+            Preencha os dados abaixo para solicitar a sua vaga.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Nome do Aluno */}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="studentName"
@@ -175,32 +206,47 @@ export function PreEnrollmentForm({
                 <FormItem>
                   <FormLabel>Nome do Aluno</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Digite o nome completo do aluno"
-                      {...field}
-                    />
+                    <Input placeholder="Nome completo" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Data de Nascimento */}
-            <FormField
-              control={form.control}
-              name="birthDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data de Nascimento</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="birthDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de Nascimento</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Nome do Responsável */}
+              <FormField
+                control={form.control}
+                name="guardianPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone do Responsável</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(27) 99999-9999"
+                        {...field}
+                        inputMode="tel"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="guardianName"
@@ -208,162 +254,121 @@ export function PreEnrollmentForm({
                 <FormItem>
                   <FormLabel>Nome do Responsável</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Digite o nome completo do responsável"
-                      {...field}
-                    />
+                    <Input placeholder="Nome completo" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Telefone do Responsável */}
-            <FormField
-              control={form.control}
-              name="guardianPhone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Telefone do Responsável</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="(11) 99999-9999"
-                      {...field}
-                      onChange={(e) => {
-                        // Formatação básica do telefone
-                        let value = e.target.value.replace(/\D/g, "");
-                        if (value.length <= 11) {
-                          value = value.replace(
-                            /(\d{2})(\d{5})(\d{4})/,
-                            "($1) $2-$3",
-                          );
-                          if (value.length < 14) {
-                            value = value.replace(
-                              /(\d{2})(\d{4})(\d{4})/,
-                              "($1) $2-$3",
-                            );
-                          }
-                        }
-                        field.onChange(value);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Serviço Solicitado */}
-            <FormField
-              control={form.control}
-              name="service"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Serviço Solicitado</FormLabel>
-                  <Select
-                    onValueChange={handleServiceChange}
-                    value={field.value}
-                  >
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="service"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Serviço Solicitado</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o serviço" />
-                      </SelectTrigger>
+                      <Select
+                        onValueChange={(v) => {
+                          field.onChange(v as PreEnrollmentForm["service"]);
+                          // limpa a série quando muda o serviço
+                          form.setValue("grade", undefined as any);
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SERVICE_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="integral">Integral</SelectItem>
-                      <SelectItem value="meio-periodo">Meio Período</SelectItem>
-                      <SelectItem value="infantil-vespertino">
-                        Infantil - Vespertino
-                      </SelectItem>
-                      <SelectItem value="fundamental-vespertino">
-                        Fundamental - Vespertino
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Série (condicional baseada no serviço) */}
-            {selectedService && (
               <FormField
                 control={form.control}
                 name="grade"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Série</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
+                    <FormControl>
+                      <Select
+                        onValueChange={(v) => field.onChange(v as any)}
+                        value={field.value}
+                        disabled={!service}
+                      >
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione a série" />
+                          <SelectValue
+                            placeholder={
+                              service
+                                ? "Selecione"
+                                : "Escolha o serviço primeiro"
+                            }
+                          />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {gradeOptions[selectedService]?.map((grade) => (
-                          <SelectItem key={grade.value} value={grade.value}>
-                            {grade.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {allowedGrades.map((g) => (
+                            <SelectItem key={g} value={g}>
+                              {gradeLabel[g]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
+            </div>
 
-            {/* Opção de Pagamento */}
             <FormField
               control={form.control}
               name="paymentOption"
               render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Opção de Pagamento da Matrícula</FormLabel>
+                <FormItem>
+                  <FormLabel>Pagamento da Matrícula</FormLabel>
                   <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
+                    <Select
+                      onValueChange={(v) =>
+                        field.onChange(v as PreEnrollmentForm["paymentOption"])
+                      }
                       value={field.value}
-                      className="flex flex-col space-y-2"
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="vista" id="vista" />
-                        <label
-                          htmlFor="vista"
-                          className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          À vista em setembro
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="parcelado" id="parcelado" />
-                        <label
-                          htmlFor="parcelado"
-                          className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          Parcelado (1ª parcela em setembro, 2ª parcela em
-                          outubro)
-                        </label>
-                      </div>
-                    </RadioGroup>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAYMENT_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
-                className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="flex-1">
-                Enviar Pré-Matrícula
-              </Button>
+              <Button type="submit">Enviar pré-matrícula</Button>
             </div>
           </form>
         </Form>

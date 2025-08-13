@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import Menu from "./menu";
-import { PreEnrollmentForm } from "./pre-enrollment-form";
+import PreEnrollmentDialog from "./pre-enrollment-form";
 
 export const Header = () => {
   return (
@@ -11,10 +10,7 @@ export const Header = () => {
       </Link>
 
       <div className="flex items-center gap-3">
-        <PreEnrollmentForm
-          classForm="w-44 cursor-pointer"
-          classFormP="text-[16px]"
-        />
+        <PreEnrollmentDialog />
       </div>
     </header>
   );

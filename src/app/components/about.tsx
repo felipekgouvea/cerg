@@ -65,42 +65,13 @@ export function About() {
                     Equipe pedagógica qualificada e experiente
                   </span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 flex-shrink-0 text-red-500" />
-                  <span className="font-medium text-gray-700">
-                    Metodologia inovadora e personalizada
-                  </span>
-                </div>
+
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-6 w-6 flex-shrink-0 text-red-500" />
                   <span className="font-medium text-gray-700">
                     Parceria sólida com as famílias
                   </span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 flex-shrink-0 text-red-500" />
-                  <span className="font-medium text-gray-700">
-                    Infraestrutura moderna e segura
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4 pt-6 sm:flex-row">
-                <Button
-                  size="lg"
-                  className="rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-8 py-3 font-semibold text-white shadow-lg transition-all hover:from-red-700 hover:to-red-800 hover:shadow-xl"
-                >
-                  <Phone className="mr-2 h-5 w-5" />
-                  Contato via WhatsApp
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="rounded-xl border-2 border-red-600 bg-transparent px-8 py-3 font-semibold text-red-600 hover:bg-red-50"
-                >
-                  <MapPin className="mr-2 h-5 w-5" />
-                  Localização da Escola
-                </Button>
               </div>
             </div>
           </div>
@@ -139,7 +110,7 @@ export function About() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 lg:hidden">
             <div className="space-y-4">
               <Image
                 src={Image_05}
