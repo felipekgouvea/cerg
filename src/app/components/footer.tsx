@@ -20,7 +20,7 @@ const Footer = () => {
               />
             </div>
             <p className="leading-relaxed text-gray-300">
-              32 anos formando gerações com amor, dedicação, qualidade e
+              31 anos formando gerações com amor, dedicação, qualidade e
               excelência pedagógica. Seu filho merece o melhor!
             </p>
           </div>

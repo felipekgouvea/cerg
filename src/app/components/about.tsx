@@ -23,7 +23,7 @@ export function About() {
               </h2>
 
               <p className="text-justify text-lg leading-relaxed text-gray-700">
-                A Escola Infantil Brilho de Lua foi fundada em 1993, tendo como
+                A Escola Infantil Brilho de Lua foi fundada em 1994, tendo como
                 fundadoras as educadoras Marasilva Falcão de Gouvêa, Maria
                 Aparecida Gouvêa Altoé e Rosa Maria de Oliveira que sempre
                 contribuíram com os aspectos educacionais e sociais de
@@ -54,7 +54,7 @@ export function About() {
               </p>
 
               <p className="text-justify text-lg leading-relaxed text-gray-700">
-                <strong className="text-red-600">Há 32 anos</strong>, nossa
+                <strong className="text-red-600">Há 31 anos</strong>, nossa
                 instituição tem se dedicado à formação integral de nossos
                 alunos.
               </p>

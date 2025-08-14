@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import Aluno_01 from "../../../public/aluno-01.png";
 import Aluno_02 from "../../../public/aluno-02.png";
+import PreEnrollmentDialog from "./pre-enrollment-form";
 
 export function Hero() {
   return (
@@ -24,10 +25,10 @@ export function Hero() {
         <article className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div className="space-y-6">
             <h1
-              className="text-3xl leading-10 font-bold md:text-4xl lg:text-5xl"
+              className="text-center text-3xl leading-10 font-bold md:text-4xl lg:text-5xl"
               data-aos="fade-down"
             >
-              Matriculas abertas 2026 - Em Outubro
+              PRÉ-REMATRÍCULAS EM SETEMBRO
             </h1>
             <p className="lg:text-lg" data-aos="fade-right">
               Oferecemos um ensino de qualidade em um ambiente acolhedor,
@@ -35,16 +36,7 @@ export function Hero() {
               nossos alunos.
             </p>
 
-            <a
-              data-aos="fade-up"
-              data-aos-delay="500"
-              target="_blank"
-              href={`https://wa.me/5527999151404?text=Olá vim pelo site e gostaria de mais informações`}
-              className="flex w-fit items-center justify-center gap-2 rounded-md bg-green-500 px-5 py-2 font-semibold"
-            >
-              <Wheat className="h-5 w-5" />
-              Contato via WhatsApp
-            </a>
+            <PreEnrollmentDialog />
 
             <div className="mt-8">
               <p>
