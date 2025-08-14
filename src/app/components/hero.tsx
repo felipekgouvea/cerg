@@ -21,7 +21,7 @@ export function Hero() {
         <div className="absolute inset-0 bg-black opacity-40 md:hidden"></div>
       </div>
 
-      <div className="relative container mx-auto px-4 pt-16 pb-16 md:pb-0">
+      <div className="relative container mx-auto px-4 pt-16 pb-6 md:pb-0">
         <article className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div className="space-y-6">
             <h1
@@ -46,7 +46,7 @@ export function Hero() {
             </div>
             <div className="mt-8 text-center text-[40px]">
               <h1
-                className="text-center text-3xl leading-10 font-bold md:text-4xl lg:text-5xl"
+                className="text-center text-2xl leading-10 font-bold md:text-4xl lg:text-5xl"
                 data-aos="fade-down"
               >
                 PRÉ-MATRÍCULAS EM OUTUBRO
