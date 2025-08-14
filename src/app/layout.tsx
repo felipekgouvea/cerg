@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CERG",
+  title: "CERG - Centro Educacional Ribeiro Gouvêa",
   description: "Site do Centro Educacional Ribeiro Gouvêa",
 };
 
