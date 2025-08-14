@@ -1,6 +1,7 @@
 import {
   Bell,
   Calendar,
+  ChevronUp,
   CreditCard,
   FileText,
   GraduationCap,
@@ -17,9 +18,9 @@ import MateriaisUniformes from "./components/materiais-uniformes";
 import DocumentosMatricula from "./components/documentos-matricula";
 import Faq from "./components/faq";
 import { About } from "./components/about";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+
 import CountdownTimer from "./components/countdown-timer";
+import ShowScrollToTop from "./components/show-scroll-to-top";
 
 const HomePage = () => {
   return (
@@ -38,6 +39,7 @@ const HomePage = () => {
         <Faq />
         <Footer />
         <CountdownTimer />
+        <ShowScrollToTop />
       </div>
     </>
   );
