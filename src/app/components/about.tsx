@@ -23,40 +23,47 @@ export function About() {
               </h2>
 
               <p className="text-justify text-lg leading-relaxed text-gray-700">
-                O Centro Educacional Ribeiro Gouvêa foi fundado com o propósito
-                de oferecer uma educação de excelência, baseada em valores
-                sólidos e metodologia inovadora. Ao longo de{" "}
-                <strong className="text-red-600">32 anos</strong>, nossa
-                instituição tem se dedicado à formação integral de crianças e
-                jovens.
+                A Escola Infantil Brilho de Lua foi fundada em 1993, tendo como
+                fundadoras as educadoras Marasilva Falcão de Gouvêa, Maria
+                Aparecida Gouvêa Altoé e Rosa Maria de Oliveira que sempre
+                contribuíram com os aspectos educacionais e sociais de
+                Cariacica.
               </p>
 
               <p className="text-justify text-lg leading-relaxed text-gray-700">
-                Nosso compromisso é formar cidadãos conscientes, críticos e
-                preparados para os desafios do futuro. Trabalhamos em parceria
-                com as famílias, criando um ambiente acolhedor onde cada aluno
-                pode desenvolver seu potencial máximo através de um
-                relacionamento de confiança e respeito mútuo.
+                Sendo assim o nosso intuito foi de junto com sua família formar
+                uma Escola de Futuro, com metodologia própria, promovendo o seu
+                crescimento integral, através de um relacionamento de confiança
+                e respeito mútuo, entre aluno – professor – família.
               </p>
 
               <p className="text-justify text-lg leading-relaxed text-gray-700">
-                Com uma equipe pedagógica altamente qualificada e infraestrutura
-                moderna, o CERG oferece desde a Educação Infantil até o Ensino
-                Fundamental I, sempre priorizando a qualidade do ensino e o
-                desenvolvimento socioemocional dos nossos alunos.
+                No ano de 2011, a escola passou a se chamar CENTRO EDUCACIONAL
+                RIBEIRO GOUVÊA. Essa mudança mostra o crescimento da instituição
+                e o desejo de suas mantenedoras em homenagear seus pais.
               </p>
 
               <p className="text-justify text-lg leading-relaxed text-gray-700">
-                Nossa metodologia combina tradição e inovação, proporcionando
-                experiências educativas significativas que preparam nossos
-                alunos para serem protagonistas de suas próprias histórias.
+                No ano de 2015 Lacilda Reinoso Kinupes Gouvêa e Felipe Kinupes
+                Gouvêa, assumiram a administração da instituição e procuraram
+                manter a qualidade do ensino e modernizar alguns processos
+                pedagógicos e operacionais. Ofertar uma educação de qualidade
+                apoiada por princípios inovadores e com uma relação de confiança
+                e respeito com as famílias, continua sendo o principal
+                compromisso da instituição.{" "}
+              </p>
+
+              <p className="text-justify text-lg leading-relaxed text-gray-700">
+                <strong className="text-red-600">Há 32 anos</strong>, nossa
+                instituição tem se dedicado à formação integral de nossos
+                alunos.
               </p>
 
               <div className="space-y-4 pt-4">
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-6 w-6 flex-shrink-0 text-red-500" />
                   <span className="font-medium text-gray-700">
-                    Fundada há 32 anos com tradição em educação
+                    Fundada em 1994 com tradição em educação
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
