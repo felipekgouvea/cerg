@@ -54,7 +54,7 @@ const CountdownTimer = ({
   return (
     <div className="fixed right-0 bottom-0 left-0 z-40 border-t-4 border-yellow-400 bg-gradient-to-r from-red-600 via-red-700 to-red-800 text-white shadow-2xl">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-4 lg:flex-row">
+        <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
           {/* Left Content */}
           <div className="flex items-center space-x-3">
             <div className="flex h-12 w-12 animate-pulse items-center justify-center rounded-full bg-yellow-400">
