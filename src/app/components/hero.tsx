@@ -41,8 +41,16 @@ export function Hero() {
             <div className="mt-8">
               <p>
                 Garanta seu desconto especial na rematrícula, realizando sua
-                pré-matrícula em setembro!
+                pré-rematrícula em setembro!
               </p>
+            </div>
+            <div className="mt-8 text-center text-[40px]">
+              <h1
+                className="text-center text-3xl leading-10 font-bold md:text-4xl lg:text-5xl"
+                data-aos="fade-down"
+              >
+                PRÉ-MATRÍCULAS EM OUTUBRO
+              </h1>
             </div>
           </div>
 
