@@ -41,3 +41,17 @@ export const preEnrollments = pgTable("pre_enrollments", {
     .defaultNow()
     .notNull(),
 });
+
+export const preRegistration = pgTable("pre_registration", {
+  id: serial("id").primaryKey(),
+  studentName: text("student_name").notNull(),
+  birthDate: date("birth_date", { mode: "date" }).notNull(),
+  guardianName: text("guardian_name").notNull(),
+  guardianPhone: text("guardian_phone").notNull(),
+  service: serviceEnum("service").notNull(),
+  grade: gradeEnum("grade").notNull(),
+  paymentOption: paymentEnum("payment_option").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: false })
+    .defaultNow()
+    .notNull(),
+});
