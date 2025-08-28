@@ -1,5 +1,6 @@
 // app/_lib/messages/registration-whatsapp.ts
-import type { Registration } from "@/app/actions/get-registrations";
+
+import type { Registration } from "../types/registration";
 
 /** Labels legíveis */
 export const SERVICE_LABEL: Record<Registration["service"], string> = {

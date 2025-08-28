@@ -1,6 +1,7 @@
 // src/lib/validation/pre-registration.ts
 import { z } from "zod";
 
+/* ===== Enums (UI) ===== */
 export const gradeZ = z.enum([
   "MATERNAL_3",
   "PRE_I_4",
@@ -11,32 +12,56 @@ export const gradeZ = z.enum([
   "ANO_4",
   "ANO_5",
 ] as const);
+export type Grade = z.infer<typeof gradeZ>;
 
+export const serviceKeyZ = z.enum([
+  "integral",
+  "meio_periodo",
+  "infantil_vespertino",
+  "fundamental_vespertino",
+] as const);
+export type ServiceKey = z.infer<typeof serviceKeyZ>;
+
+// UI do formulário usa one_oct (mapeamos p/ DB nas actions)
 export const paymentUiZ = z.enum(["one_oct", "two_sep_oct"] as const);
-export const preStatusSchema = z.enum([
+export type PaymentUI = z.infer<typeof paymentUiZ>;
+
+// Status usado nas telas/listas
+export const preStatusZ = z.enum([
   "realizada",
   "em_conversas",
   "finalizado",
   "cancelado",
 ] as const);
+export type PreStatus = z.infer<typeof preStatusZ>;
 
-// Formulário da UI (navegador) — birthDate é string (YYYY-MM-DD)
-export const preRegistrationFormZ = z.object({
+/* ===== Schema principal do formulário de PRÉ-MATRÍCULA =====
+   birthDate é string "YYYY-MM-DD" (convertemos na action se necessário)
+   status tem default "realizada" (mesmo se você não mostrar no form)
+============================================================== */
+export const preRegistrationSchema = z.object({
   studentName: z.string().min(3, "Informe o nome do aluno"),
   birthDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use o formato AAAA-MM-DD"),
   guardianName: z.string().min(3, "Informe o nome do responsável"),
   guardianPhone: z.string().min(10, "Telefone inválido"),
-  targetYear: z.coerce.number().int().min(2025).default(2026),
+
+  targetYear: z.number().int().min(2025).default(2026),
   targetGrade: gradeZ,
-  // service é opcional na pré-matrícula
-  serviceId: z.coerce.number().int().positive().optional(),
+
+  // opcional: serviço escolhido já no cadastro (pode ficar vazio)
+  serviceId: z.number().int().positive().optional(),
+
   paymentOption: paymentUiZ.default("one_oct"),
-  status: preStatusSchema.default("realizada"),
+
+  // Mantemos aqui porque algumas actions/fluxos usam esse valor.
+  // Se o seu form não exibir, ele entra com o default "realizada".
+  status: preStatusZ.default("realizada"),
 });
 
-export type PreRegistrationFormClient = z.infer<typeof preRegistrationFormZ>;
-export type Grade = z.infer<typeof gradeZ>;
-export type PaymentUI = z.infer<typeof paymentUiZ>;
-export type PreStatus = z.infer<typeof preStatusSchema>;
+// Alias usado por outras actions (ex.: updatePreRegistrationStatus)
+export const preStatusSchema = preStatusZ;
+
+/* ===== Tipos ===== */
+export type PreRegistrationForm = z.infer<typeof preRegistrationSchema>;

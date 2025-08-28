@@ -1,79 +1,83 @@
 "use server";
 
 import { db } from "@/db";
-import { preRegistrations } from "@/db/schema";
+import { preRegistrations, type NewPreRegistration } from "@/db/schema";
 import {
   preRegistrationSchema,
+  preStatusSchema,
   type PreRegistrationForm,
 } from "@/lib/validation/pre-registration";
+import { z } from "zod";
 
-// opcional: normaliza telefone removendo máscara
-function stripMask(phone: string) {
+/* ============== Helpers ============== */
+
+function stripMask(phone: string): string {
   return phone.replace(/\D/g, "");
 }
 
-// status válidos (mesmo que o Zod ainda não tenha)
-type PreStatus = "realizada" | "em_conversas" | "finalizado" | "cancelado";
-const VALID_STATUS = new Set<PreStatus>([
-  "realizada",
-  "em_conversas",
-  "finalizado",
-  "cancelado",
-]);
+type PaymentDB = "one_sep" | "two_sep_oct";
+function mapPaymentUIToDB(ui: "one_oct" | "two_sep_oct"): PaymentDB {
+  // UI mostra "one_oct" (paga em outubro), mas no BD usamos "one_sep"
+  return ui === "one_oct" ? "one_sep" : "two_sep_oct";
+}
 
-export async function createPreRegistration(input: PreRegistrationForm) {
-  // valida o que já existe no seu schema atual
+// Converte "YYYY-MM-DD" para Date em UTC (00:00)
+function ymdToDateUTC(ymd: string): Date {
+  const [y, m, d] = ymd.split("-").map((n) => parseInt(n, 10));
+  return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0));
+}
+
+/* ============== Action ============== */
+
+export async function createPreRegistration(
+  input: PreRegistrationForm,
+): Promise<
+  | { success: true }
+  | {
+      success: false;
+      error: "VALIDATION_ERROR" | "INVALID_STATUS" | "DB_ERROR";
+      issues?: z.inferFlattenedErrors<typeof preRegistrationSchema>;
+    }
+> {
+  // 1) Validação do payload do formulário (birthDate: string)
   const parsed = preRegistrationSchema.safeParse(input);
   if (!parsed.success) {
-    console.error(
-      "createPreRegistration validation error",
-      parsed.error.format(),
-    );
     return {
       success: false,
       error: "VALIDATION_ERROR",
       issues: parsed.error.flatten(),
     };
   }
-
   const data = parsed.data;
 
-  // lê 'status' direto do input (pode não existir no seu Zod ainda)
-  const requestedStatus = (input as any)?.status as string | undefined;
-  const status =
-    requestedStatus && VALID_STATUS.has(requestedStatus as PreStatus)
-      ? (requestedStatus as PreStatus)
-      : undefined; // deixa DB default se não vier
+  // 2) Status válido (seu Zod já define defaults/enum)
+  const statusParse = preStatusSchema.safeParse(data.status);
+  if (!statusParse.success) {
+    return { success: false, error: "INVALID_STATUS" };
+  }
 
-  // Salva data como string "YYYY-MM-DD" para evitar -1 dia por timezone.
-  const birthDateStr =
-    typeof data.birthDate === "string"
-      ? data.birthDate
-      : (() => {
-          const d = new Date(data.birthDate as any);
-          const y = d.getUTCFullYear();
-          const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-          const dd = String(d.getUTCDate()).padStart(2, "0");
-          return `${y}-${m}-${dd}`;
-        })();
+  // 3) Monta valores compatíveis com o schema do BD
+  const values: NewPreRegistration = {
+    studentName: data.studentName.trim(),
+    birthDate: ymdToDateUTC(data.birthDate), // Drizzle date(mode:"date") espera Date
+    guardianName: data.guardianName.trim(),
+    guardianPhone: stripMask(data.guardianPhone),
+
+    targetYear: data.targetYear,
+    targetGrade: data.targetGrade,
+
+    serviceId: data.serviceId ?? null,
+    valueId: null,
+    priceTier: null,
+    appliedPriceCents: null,
+
+    paymentOption: mapPaymentUIToDB(data.paymentOption),
+    status: statusParse.data, // ex.: "realizada" (default do Zod/BD)
+    // createdAt usa defaultNow()
+  };
 
   try {
-    // monta valores base
-    const values: any = {
-      studentName: data.studentName.trim(),
-      birthDate: birthDateStr, // Drizzle date(..., { mode: "string" })
-      guardianName: data.guardianName.trim(),
-      guardianPhone: stripMask(data.guardianPhone),
-      service: data.service,
-      grade: data.grade,
-      paymentOption: data.paymentOption,
-    };
-
-    // adiciona status se veio válido (senão DB usa default)
-    if (status) values.status = status;
-
     await db.insert(preRegistrations).values(values);
-
     return { success: true };
   } catch (err) {
     console.error("createPreRegistration db error", err);

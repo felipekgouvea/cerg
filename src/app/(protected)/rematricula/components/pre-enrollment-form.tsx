@@ -38,7 +38,6 @@ import {
   fetchGradesWithStudents,
   fetchStudentsByGrade,
   fetchServices,
-  fetchServiceValue,
   fetchPreReenrolledIds,
   createPreReenrollment,
   type Grade,
@@ -50,12 +49,6 @@ import {
 type PaymentUI = "one_oct" | "two_sep_oct";
 type ServiceDTO = { id: number; key: ServiceKey; name: string };
 type GradeCountDTO = { grade: Grade; count: number };
-type ValueDTO = {
-  id: number;
-  listPriceCents: number;
-  punctualPriceCents: number;
-  reenrollPriceCents: number;
-};
 
 /* ========== Labels ========== */
 const GRADE_LABEL: Record<Grade, string> = {
@@ -180,11 +173,6 @@ export function PreEnrollmentForm() {
 
   const [nextGrade, setNextGrade] = React.useState<Grade | undefined>();
   const [serviceId, setServiceId] = React.useState<number | undefined>();
-  const priceQuery = useQuery({
-    queryKey: ["value-2026", nextGrade, serviceId],
-    queryFn: () => fetchServiceValue(2026, nextGrade!, serviceId!),
-    enabled: !!nextGrade && !!serviceId,
-  });
 
   /* ===== Mapas ===== */
   const idToService = React.useMemo(() => {
@@ -298,7 +286,7 @@ export function PreEnrollmentForm() {
         nextYear: values.nextYear,
         nextGrade: values.nextGrade,
         serviceId: values.serviceId,
-        valueId: priceQuery.data?.id ?? null, // referência se existir
+        valueId: null, // não usamos valor referenciado; tabela fixa local
         priceTier: "reenrollment",
         appliedPriceCents: totalReenrollCents, // total (desconto set + material)
         paymentOption: paymentDB,
@@ -347,7 +335,7 @@ export function PreEnrollmentForm() {
             </DialogHeader>
 
             {/* Corpo rolável */}
-            <div className="flex-1 space-y-6 overflow-y-auto overscroll-contain px-6 py-4">
+            <div className="flex-1 space-y-6 overflow-y-auto overscroll-contain px-6 py-4 [-webkit-overflow-scrolling:touch]">
               {/* Bloco: Turma 2025 + Aluno */}
               <div className="rounded-2xl border p-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -411,23 +399,18 @@ export function PreEnrollmentForm() {
                                     ? "Selecione a turma de 2025"
                                     : studentsQuery.isLoading
                                       ? "Carregando..."
-                                      : (studentsQuery.data ?? []).length
+                                      : filteredStudents.length
                                         ? "Selecione"
-                                        : "Nenhum aluno"
+                                        : "Nenhum aluno disponível"
                                 }
                               />
                             </SelectTrigger>
                             <SelectContent>
-                              {(studentsQuery.data ?? [])
-                                .filter(
-                                  (s) =>
-                                    !(preIdsQuery.data ?? []).includes(s.id),
-                                )
-                                .map((s) => (
-                                  <SelectItem key={s.id} value={String(s.id)}>
-                                    {s.name}
-                                  </SelectItem>
-                                ))}
+                              {filteredStudents.map((s) => (
+                                <SelectItem key={s.id} value={String(s.id)}>
+                                  {s.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -483,30 +466,11 @@ export function PreEnrollmentForm() {
                               />
                             </SelectTrigger>
                             <SelectContent>
-                              {(servicesQuery.data ?? [])
-                                .filter((svc) => {
-                                  if (!nextGrade) return true;
-                                  const infantil = isInfantil(nextGrade);
-                                  if (
-                                    infantil &&
-                                    svc.key === "fundamental_vespertino"
-                                  )
-                                    return false;
-                                  if (
-                                    !infantil &&
-                                    svc.key === "infantil_vespertino"
-                                  )
-                                    return false;
-                                  return true;
-                                })
-                                .map((svc) => (
-                                  <SelectItem
-                                    key={svc.id}
-                                    value={String(svc.id)}
-                                  >
-                                    {SERVICE_LABEL[svc.key] ?? svc.name}
-                                  </SelectItem>
-                                ))}
+                              {allowedServices.map((svc) => (
+                                <SelectItem key={svc.id} value={String(svc.id)}>
+                                  {SERVICE_LABEL[svc.key] ?? svc.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>

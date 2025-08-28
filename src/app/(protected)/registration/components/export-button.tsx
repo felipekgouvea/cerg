@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import type { Registration } from "@/lib/types/registration";
 import { Download } from "lucide-react";
-import type { Registration } from "@/app/actions/get-registrations";
 
 // Maps -> valor do enum ➜ label legível
 const SERVICE_LABEL: Record<Registration["service"], string> = {

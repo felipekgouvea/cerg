@@ -1,37 +1,46 @@
 "use server";
 
 import { db } from "@/db";
-import { preRegistrations } from "@/db/schema";
+import { preRegistrations, type NewPreRegistration } from "@/db/schema";
 import {
-  preRegistrationFormZ,
-  type PreRegistrationFormClient,
+  preRegistrationSchema,
   preStatusSchema,
+  type PreRegistrationForm,
 } from "@/lib/validation/pre-registration";
+import { z } from "zod";
 
-// Remove máscara do telefone
+/* ================= Helpers ================= */
+
 function stripMask(phone: string) {
   return phone.replace(/\D/g, "");
 }
 
 // UI -> BD
-function mapPaymentUIToDB(ui: "one_oct" | "two_sep_oct") {
+type PaymentDB = "one_sep" | "two_sep_oct";
+function mapPaymentUIToDB(ui: "one_oct" | "two_sep_oct"): PaymentDB {
   return ui === "one_oct" ? "one_sep" : "two_sep_oct";
 }
 
-// Converte "YYYY-MM-DD" para Date em UTC (00:00)
+// Converte "YYYY-MM-DD" para Date em UTC (00:00), evitando problemas de fuso
 function ymdToDateUTC(ymd: string): Date {
   const [y, m, d] = ymd.split("-").map((n) => parseInt(n, 10));
-  // Date.UTC(year, monthIndex, day) -> evita problemas de fuso
   return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0));
 }
 
+/* ================= Action ================= */
+
 export async function createPreRegistration(
-  input: PreRegistrationFormClient,
+  input: PreRegistrationForm,
 ): Promise<
-  { success: true } | { success: false; error: string; issues?: any }
+  | { success: true }
+  | {
+      success: false;
+      error: "VALIDATION_ERROR" | "INVALID_STATUS" | "DB_ERROR";
+      issues?: z.inferFlattenedErrors<typeof preRegistrationSchema>;
+    }
 > {
-  // 1) Validação do formulário (onde birthDate é string)
-  const parsed = preRegistrationFormZ.safeParse(input);
+  // 1) Validação do payload do formulário
+  const parsed = preRegistrationSchema.safeParse(input);
   if (!parsed.success) {
     return {
       success: false,
@@ -41,25 +50,30 @@ export async function createPreRegistration(
   }
   const data = parsed.data;
 
-  // 2) Valida status explicitamente (definido no seu schema)
+  // 2) Status (validação explícita; tem default no schema)
   const s = preStatusSchema.safeParse(data.status);
   if (!s.success) {
     return { success: false, error: "INVALID_STATUS" };
   }
 
-  // 3) Monta os valores para Drizzle
-  //    -> birthDate precisa ser Date porque no schema está mode: "date"
-  const values = {
+  // 3) Monta os valores para insert (tipado pelo schema do BD)
+  const values: NewPreRegistration = {
     studentName: data.studentName.trim(),
-    birthDate: ymdToDateUTC(data.birthDate), // <-- Date (corrige o erro)
+    birthDate: ymdToDateUTC(data.birthDate), // Drizzle date(mode:"date") espera Date
     guardianName: data.guardianName.trim(),
     guardianPhone: stripMask(data.guardianPhone),
+
     targetYear: data.targetYear,
     targetGrade: data.targetGrade,
+
     serviceId: data.serviceId ?? null,
-    paymentOption: mapPaymentUIToDB(data.paymentOption) as any, // ("one_sep" | "two_sep_oct")
-    status: s.data, // requer a coluna "status" no seu schema
-    // valueId / priceTier / appliedPriceCents: permanecem nulos na pré-matrícula
+    valueId: null,
+    priceTier: null,
+    appliedPriceCents: null,
+
+    paymentOption: mapPaymentUIToDB(data.paymentOption),
+    status: s.data, // requer a coluna 'status' em pre_registrations
+    // createdAt: defaultNow()
   };
 
   try {
