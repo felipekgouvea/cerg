@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Calendar, CreditCard, FileText, GraduationCap } from "lucide-react";
-import PreEnrollmentDialog from "./pre-enrollment-form";
+import { PreEnrollmentForm } from "../(protected)/rematricula/components/pre-enrollment-form";
+import PreRegistrationFormDialog from "../(protected)/registration/components/pre-registration-form-dialog";
 
 const Matricula = () => {
   return (
@@ -71,7 +72,7 @@ const Matricula = () => {
             size="lg"
             className="w-full cursor-pointer rounded-full p-8 text-[25px]"
           >
-            <PreEnrollmentDialog />
+            <PreRegistrationFormDialog />
           </Button>
         </div>
       </div>

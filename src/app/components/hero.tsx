@@ -3,7 +3,8 @@ import Image from "next/image";
 
 import Aluno_01 from "../../../public/aluno-01.png";
 import Aluno_02 from "../../../public/aluno-02.png";
-import PreEnrollmentDialog from "./pre-enrollment-form";
+import { PreEnrollmentForm } from "../(protected)/rematricula/components/pre-enrollment-form";
+import PreRegistrationFormDialog from "../(protected)/registration/components/pre-registration-form-dialog";
 
 export function Hero() {
   return (
@@ -25,7 +26,7 @@ export function Hero() {
         <article className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div className="space-y-6">
             <h1
-              className="text-center text-3xl leading-10 font-bold md:text-4xl lg:text-5xl"
+              className="text-center text-2xl leading-10 font-bold md:text-4xl lg:text-5xl"
               data-aos="fade-down"
             >
               PRÉ-REMATRÍCULAS EM SETEMBRO
@@ -35,15 +36,12 @@ export function Hero() {
               garantindo o desenvolvimento, o bem-estar e a felicidade dos
               nossos alunos.
             </p>
+            <span className="font-bold">
+              Garanta seu desconto especial na rematrícula, realizando sua
+              pré-rematrícula em setembro!
+            </span>
+            <PreEnrollmentForm />
 
-            <PreEnrollmentDialog />
-
-            <div className="mt-8">
-              <p>
-                Garanta seu desconto especial na rematrícula, realizando sua
-                pré-rematrícula em setembro!
-              </p>
-            </div>
             <div className="mt-8 text-center text-[40px]">
               <h1
                 className="text-center text-2xl leading-10 font-bold md:text-4xl lg:text-5xl"
@@ -51,6 +49,8 @@ export function Hero() {
               >
                 PRÉ-MATRÍCULAS EM OUTUBRO
               </h1>
+
+              <PreRegistrationFormDialog />
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import PreEnrollmentDialog from "./pre-enrollment-form";
+import PreEnrollmentDialog from "../(protected)/rematricula/components/pre-enrollment-form";
 
 export const Header = () => {
   return (
