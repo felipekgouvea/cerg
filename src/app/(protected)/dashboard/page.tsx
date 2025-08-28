@@ -16,6 +16,9 @@ import { Users, GraduationCap, Wallet, CalendarRange } from "lucide-react";
 import Link from "next/link";
 import DashboardCharts from "@/app/components/dashboard-charts";
 import { getDashboardStudents } from "@/app/actions/get-dashboard-students";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 // Tipagens/labels locais (iguais às que você já usa)
 const GRADE_LABEL: Record<string, string> = {
@@ -45,6 +48,13 @@ type PageProps = {
 };
 
 export default async function DashboardPage({ searchParams }: PageProps) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session?.user) {
+    redirect("/authentication");
+  }
+
   // 👇 Aguarde o objeto
   const sp = (await searchParams) ?? {};
   const from = typeof sp.from === "string" ? sp.from : undefined;
