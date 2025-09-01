@@ -316,10 +316,7 @@ export function PreEnrollmentForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          disabled
-          className="mt-10 w-full cursor-pointer rounded-2xl px-6 py-5 text-base"
-        >
+        <Button className="mt-10 w-full cursor-pointer rounded-2xl px-6 py-5 text-base">
           FAÇA AQUI SUA PRÉ-REMATRÍCULA (2026)
         </Button>
       </DialogTrigger>
