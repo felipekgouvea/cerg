@@ -19,7 +19,6 @@ import DocumentosMatricula from "./components/documentos-matricula";
 import Faq from "./components/faq";
 import { About } from "./components/about";
 
-import CountdownTimer from "./components/countdown-timer";
 import ShowScrollToTop from "./components/show-scroll-to-top";
 
 const HomePage = () => {
@@ -38,7 +37,7 @@ const HomePage = () => {
         <DocumentosMatricula />
         <Faq />
         <Footer />
-        <CountdownTimer />
+
         <ShowScrollToTop />
       </div>
     </>
