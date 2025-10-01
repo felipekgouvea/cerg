@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { preReenrollments, students, services } from "@/db/schema";
-import { asc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { unstable_noStore as noStore } from "next/cache";
 
 export type PreEnrollmentRow = {
@@ -58,7 +58,7 @@ export async function getPreEnrollments(): Promise<PreEnrollmentRow[]> {
     .from(preReenrollments)
     .innerJoin(students, eq(preReenrollments.studentId, students.id))
     .leftJoin(services, eq(preReenrollments.serviceId, services.id))
-    .orderBy(asc(preReenrollments.createdAt));
+    .orderBy(desc(preReenrollments.createdAt));
 
   return rows.map((r) => ({
     id: r.id,

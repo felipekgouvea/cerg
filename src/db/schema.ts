@@ -31,6 +31,20 @@ export const serviceEnum = pgEnum("service_enum", [
   "fundamental_vespertino",
 ]);
 
+// --- NOVOS ENUMS ---
+export const contractStatusEnum = pgEnum("contract_status_enum", [
+  "draft",
+  "active",
+  "completed",
+  "cancelled",
+]);
+
+export const installmentStatusEnum = pgEnum("installment_status_enum", [
+  "open",
+  "paid",
+  "cancelled",
+]);
+
 export const paymentEnum = pgEnum("payment_enum", [
   "one_sep", // 1x (Setembro) — sua UI mapeia one_oct -> one_sep
   "two_sep_oct", // 2x (Set/Out)
@@ -326,6 +340,78 @@ export const preReenrollments = pgTable(
   }),
 );
 
+// --- NOVAS TABELAS ---
+export const contracts = pgTable(
+  "contracts",
+  {
+    id: serial("id").primaryKey(),
+    studentId: integer("student_id")
+      .notNull()
+      .references(() => students.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    enrollmentId: integer("enrollment_id").references(() => enrollments.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    year: integer("year").notNull(), // 2026
+    grade: gradeEnum("grade").notNull(),
+    serviceId: integer("service_id")
+      .notNull()
+      .references(() => services.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    status: contractStatusEnum("status").notNull().default("active"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: false })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: false })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    idxYear: index("contracts_year_idx").on(t.year),
+    idxStudent: index("contracts_student_idx").on(t.studentId),
+    uqStudentYear: uniqueIndex("contracts_student_year_uq").on(
+      t.studentId,
+      t.year,
+    ),
+  }),
+);
+
+export const contractInstallments = pgTable(
+  "contract_installments",
+  {
+    id: serial("id").primaryKey(),
+    contractId: integer("contract_id")
+      .notNull()
+      .references(() => contracts.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    seq: integer("seq").notNull(), // número da parcela (1..12)
+    dueDate: date("due_date", { mode: "date" }).notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    discountCents: integer("discount_cents").notNull().default(0),
+    status: installmentStatusEnum("status").notNull().default("open"),
+    paidAt: timestamp("paid_at", { withTimezone: false }),
+    paidAmountCents: integer("paid_amount_cents"),
+    createdAt: timestamp("created_at", { withTimezone: false })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    idxContract: index("contract_inst_contract_idx").on(t.contractId),
+    uqContractSeq: uniqueIndex("contract_inst_contract_seq_uq").on(
+      t.contractId,
+      t.seq,
+    ),
+  }),
+);
+
 /* ====================== Relations (opcionais) ====================== */
 export const studentsRelations = relations(students, ({ many }) => ({
   enrollments: many(enrollments),
@@ -395,6 +481,33 @@ export const preReenrollmentsRelations = relations(
   }),
 );
 
+// --- RELATIONS ---
+export const contractsRelations = relations(contracts, ({ one, many }) => ({
+  student: one(students, {
+    fields: [contracts.studentId],
+    references: [students.id],
+  }),
+  enrollment: one(enrollments, {
+    fields: [contracts.enrollmentId],
+    references: [enrollments.id],
+  }),
+  service: one(services, {
+    fields: [contracts.serviceId],
+    references: [services.id],
+  }),
+  installments: many(contractInstallments),
+}));
+
+export const contractInstallmentsRelations = relations(
+  contractInstallments,
+  ({ one }) => ({
+    contract: one(contracts, {
+      fields: [contractInstallments.contractId],
+      references: [contracts.id],
+    }),
+  }),
+);
+
 /* ====================== Tipos ====================== */
 export type Student = typeof students.$inferSelect;
 export type NewStudent = typeof students.$inferInsert;
@@ -407,3 +520,55 @@ export type PreRegistration = typeof preRegistrations.$inferSelect;
 export type NewPreRegistration = typeof preRegistrations.$inferInsert;
 export type PreReenrollment = typeof preReenrollments.$inferSelect;
 export type NewPreReenrollment = typeof preReenrollments.$inferInsert;
+export type Contract = typeof contracts.$inferSelect;
+export type NewContract = typeof contracts.$inferInsert;
+export type ContractInstallment = typeof contractInstallments.$inferSelect;
+export type NewContractInstallment = typeof contractInstallments.$inferInsert;
+
+// --- NOVO BLOCO: Parcelas da pré-rematrícula ---
+
+export const preReenrollInstallments = pgTable(
+  "pre_reenroll_installments",
+  {
+    id: serial("id").primaryKey(),
+    preReenrollmentId: integer("pre_reenrollment_id")
+      .notNull()
+      .references(() => preReenrollments.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+
+    // string "YYYY-MM-DD" para facilitar edição e evitar fuso
+    dueDate: date("due_date", { mode: "string" }).notNull(),
+
+    amountCents: integer("amount_cents").notNull(),
+    discountCents: integer("discount_cents").notNull().default(0),
+
+    paidAt: timestamp("paid_at", { withTimezone: false }),
+    paidAmountCents: integer("paid_amount_cents"),
+
+    createdAt: timestamp("created_at", { withTimezone: false })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    idxPre: index("pre_inst_pre_idx").on(t.preReenrollmentId),
+    idxDue: index("pre_inst_due_idx").on(t.dueDate),
+  }),
+);
+
+export const preReenrollInstallmentsRelations = relations(
+  preReenrollInstallments,
+  ({ one }) => ({
+    pre: one(preReenrollments, {
+      fields: [preReenrollInstallments.preReenrollmentId],
+      references: [preReenrollments.id],
+    }),
+  }),
+);
+
+// Tipos
+export type PreReenrollInstallment =
+  typeof preReenrollInstallments.$inferSelect;
+export type NewPreReenrollInstallment =
+  typeof preReenrollInstallments.$inferInsert;

@@ -207,10 +207,7 @@ export default function PreRegistrationFormDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          disabled
-          className="w-full cursor-pointer rounded-2xl px-6 py-5 text-base lg:mt-10 lg:mb-10"
-        >
+        <Button className="w-full cursor-pointer rounded-2xl px-6 py-5 text-base lg:mt-10 lg:mb-10">
           FAÇA AQUI SUA PRÉ-MATRÍCULA (2026)
         </Button>
       </DialogTrigger>
@@ -411,7 +408,7 @@ export default function PreRegistrationFormDialog() {
 
               <Separator className="my-4" />
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   name="paymentOption"
                   control={form.control}
@@ -443,7 +440,7 @@ export default function PreRegistrationFormDialog() {
                     </FormItem>
                   )}
                 />
-              </div>
+              </div> */}
             </div>
 
             {/* Ações */}

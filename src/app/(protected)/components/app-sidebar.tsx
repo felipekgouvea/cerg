@@ -1,6 +1,15 @@
 "use client";
 
-import { Calendar, Home, LogIn, LogOut, User, Users } from "lucide-react";
+import {
+  Calendar,
+  CardSim,
+  ClipboardMinus,
+  Home,
+  LogIn,
+  LogOut,
+  User,
+  Users,
+} from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -43,6 +52,16 @@ const items = [
     title: "PRÉ-MATRÍCULAS",
     url: "/registration",
     icon: LogIn,
+  },
+  {
+    title: "CONTRATOS",
+    url: "/contracts",
+    icon: CardSim,
+  },
+  {
+    title: "RELATÓRIOS",
+    url: "/report",
+    icon: ClipboardMinus,
   },
 ];
 

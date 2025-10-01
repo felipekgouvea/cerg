@@ -68,7 +68,6 @@ const Matricula = () => {
 
         <div className="mt-16 text-center">
           <Button
-            disabled
             size="lg"
             className="w-full cursor-pointer rounded-full p-8 text-[25px]"
           >

@@ -26,12 +26,21 @@ export default function EnrollmentTable() {
     );
 
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      filterColumn="studentName"
-      placeholder="Filtrar por aluno..."
-      pageSize={20}
-    />
+    <div className="w-full">
+      <DataTable
+        columns={columns}
+        data={data}
+        searchFildes={[
+          "studentName",
+          "guardianName",
+          "service",
+          "grade",
+          "paymentOption",
+          "status",
+        ]}
+        placeholder="Filtrar..."
+        pageSize={10}
+      />
+    </div>
   );
 }

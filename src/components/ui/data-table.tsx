@@ -9,6 +9,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  FilterFnOption,
 } from "@tanstack/react-table";
 import * as React from "react";
 
@@ -29,12 +30,14 @@ interface DataTableProps<TData, TValue> {
   filterColumn?: string;
   placeholder?: string;
   pageSize?: number;
+  searchFildes?: string[];
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   filterColumn,
+  searchFildes = [],
   placeholder = "Buscar...",
   pageSize = 10,
 }: DataTableProps<TData, TValue>) {
@@ -59,6 +62,15 @@ export function DataTable<TData, TValue>({
     initialState: {
       pagination: { pageIndex: 0, pageSize },
     },
+    filterFns: {
+      fuzzy: (row, _, search) => {
+        const data = row.original;
+        return searchFildes.some((field) =>
+          data[field].toLowerCase().includes(search.toLowerCase()),
+        );
+      },
+    },
+    globalFilterFn: "fuzzy" as FilterFnOption<TData>,
   });
 
   // Decide se o input controla uma coluna específica ou o filtro global
